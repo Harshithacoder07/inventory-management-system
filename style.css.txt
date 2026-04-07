@@ -1,0 +1,103 @@
+body{
+margin:0;
+font-family:Segoe UI;
+background:#f4f6f9;
+}
+
+.login-page{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:linear-gradient(135deg,#4e73df,#1cc88a);
+}
+
+.login-box{
+background:white;
+padding:40px;
+border-radius:15px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+text-align:center;
+}
+
+.login-box input{
+display:block;
+width:250px;
+margin:15px auto;
+padding:12px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+.login-box button{
+padding:12px 30px;
+background:#4e73df;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.app{
+display:none;
+}
+
+.sidebar{
+width:220px;
+height:100vh;
+background:#2c3e50;
+position:fixed;
+padding-top:20px;
+overflow-y:auto;
+}
+
+.sidebar h2{
+color:white;
+text-align:center;
+}
+
+.sidebar button{
+width:100%;
+padding:15px;
+border:none;
+background:none;
+color:white;
+text-align:left;
+cursor:pointer;
+font-size:15px;
+}
+
+.sidebar button:hover{
+background:#34495e;
+}
+
+.content{
+margin-left:240px;
+padding:30px;
+}
+
+.page{
+display:none;
+background:white;
+padding:30px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.active{
+display:block;
+}
+
+.cards{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.card{
+background:#ffffff;
+padding:40px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+width:180px;
+}

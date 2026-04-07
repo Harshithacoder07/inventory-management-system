@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar Toggle Animation */
+.sidebar.collapsed {
+    width: 80px;
+}
+.sidebar.collapsed .sidebar-text {
+    display: none;
+}
+
+/* Custom Scrollbar (Spotify Style) */
+.custom-scroll::-webkit-scrollbar {
+    width: 12px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Page Control */
+.page {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+.page.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Table Design */
+#pTableBody tr {
+    background: #181818;
+    transition: background 0.2s;
+}
+#pTableBody tr:hover {
+    background: #282828;
+}
+
+.nav-btn {
+    color: #b3b3b3;
+}
+.nav-btn:hover {
+    color: white;
+}
+.nav-btn.active {
+    background: #282828;
+    color: white;
+}
+
+.modal {
+    backdrop-filter: blur(8px);
+}

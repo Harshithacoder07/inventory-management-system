@@ -1,0 +1,17 @@
+function login(){
+let username=document.getElementById("username").value;
+let password=document.getElementById("password").value;
+
+if(username==="admin" && password==="1234"){
+document.getElementById("loginPage").style.display="none";
+document.getElementById("app").style.display="block";
+}else{
+alert("Invalid Login");
+}
+}
+
+function showPage(pageId){
+let pages=document.querySelectorAll(".page");
+pages.forEach(page=>page.classList.remove("active"));
+document.getElementById(pageId).classList.add("active");
+}
