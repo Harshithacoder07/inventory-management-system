@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Inventory Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        body { background-color: #121212; color: white; }
+        
+        /* Sidebar Transitions */
+        .sidebar { width: 260px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar.collapsed { width: 85px; }
+        .sidebar.collapsed .sidebar-text { display: none; }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* Page Logic */
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+        .nav-btn { color: #b3b3b3; transition: 0.2s; }
+        .nav-btn:hover, .nav-btn.active { color: white; background: #282828; }
+        
+        .modal { backdrop-filter: blur(12px); background: rgba(0,0,0,0.7); }
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <div id="loginPage" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6">
+        <div class="w-full max-w-sm text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-[#1DB954]/10 rounded-3xl mb-6 shadow-2xl shadow-[#1DB954]/5">
+                <i class="fas fa-shield-halved text-[#1DB954] text-4xl"></i>
+            </div>
+            <h1 class="text-3xl font-black mb-8 tracking-tighter text-white">Nexus Inventory</h1>
+            <form id="loginForm" class="space-y-4">
+                <input type="text" id="user" placeholder="Username" required class="w-full bg-[#181818] p-4 rounded-full border border-transparent focus:border-[#1DB954] outline-none text-sm transition">
+                <input type="password" id="pass" placeholder="Password" required class="w-full bg-[#181818] p-4 rounded-full border border-transparent focus:border-[#1DB954] outline-none text-sm transition">
+                <button type="submit" class="w-full bg-[#1DB954] text-black font-black py-4 rounded-full hover:scale-105 transition transform active:scale-95 mt-4 shadow-lg shadow-[#1DB954]/20">
+                    Enter 
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="mainApp" class="flex h-screen p-2 gap-2 hidden">
+        
+        <aside id="sidebar" class="sidebar bg-black rounded-2xl flex flex-col p-4 shrink-0 overflow-hidden">
+            <div class="mb-8 px-2 flex items-center gap-3 text-[#1DB954]">
+                <i class="fas fa-cube text-2xl"></i>
+                <span class="font-black text-xl tracking-tighter sidebar-text">NEXUS</span>
+            </div>
+            
+            <nav class="flex-1 space-y-1">
+                <button onclick="showPage('dashboard')" class="nav-btn active w-full flex items-center gap-4 p-3 rounded-xl">
+                    <i class="fas fa-house text-xl"></i> <span class="sidebar-text font-bold">Dashboard</span>
+                </button>
+                <button onclick="showPage('products')" class="nav-btn w-full flex items-center gap-4 p-3 rounded-xl">
+                    <i class="fas fa-box text-xl"></i> <span class="sidebar-text font-bold">Products</span>
+                </button>
+                <button onclick="showPage('suppliers')" class="nav-btn w-full flex items-center gap-4 p-3 rounded-xl">
+                    <i class="fas fa-truck-fast text-xl"></i> <span class="sidebar-text font-bold">Suppliers</span>
+                </button>
+                <button onclick="showPage('stockin')" class="nav-btn w-full flex items-center gap-4 p-3 rounded-xl">
+                    <i class="fas fa-arrow-down-long text-xl"></i> <span class="sidebar-text font-bold">Stock In</span>
+                </button>
+                <button onclick="showPage('stockout')" class="nav-btn w-full flex items-center gap-4 p-3 rounded-xl">
+                    <i class="fas fa-arrow-up-long text-xl"></i> <span class="sidebar-text font-bold">Stock Out</span>
+                </button>
+                <button onclick="showPage('reports')" class="nav-btn w-full flex items-center gap-4 p-3 rounded-xl">
+                    <i class="fas fa-chart-line text-xl"></i> <span class="sidebar-text font-bold">Reports</span>
+                </button>
+            </nav>
+
+            <button onclick="location.reload()" class="flex items-center gap-4 p-3 text-gray-500 hover:text-rose-500 transition border-t border-white/5 pt-6">
+                <i class="fas fa-power-off"></i> <span class="sidebar-text font-bold">Logout</span>
+            </button>
+        </aside>
+
+        <main class="flex-1 bg-[#121212] rounded-2xl overflow-hidden flex flex-col">
+            <header class="h-16 flex items-center justify-between px-8 bg-black/20 backdrop-blur-md">
+                <div class="flex items-center gap-4">
+                    <button onclick="document.getElementById('sidebar').classList.toggle('collapsed')" class="bg-white/5 p-2 rounded-full hover:bg-white/10"><i class="fas fa-bars"></i></button>
+                    <h2 id="pageTitle" class="text-xl font-bold">System Dashboard</h2>
+                </div>
+                <div class="flex items-center gap-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                    <span>Node: <span class="text-[#1DB954]">admin</span></span>
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=1DB954&color=000" class="w-8 h-8 rounded-full">
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8 custom-scroll">
+                
+                <section id="dashboardPage" class="page active">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                        <div class="bg-[#181818] p-6 rounded-2xl hover:bg-[#222] transition border border-white/5">
+                            <p class="text-[10px] font-black text-gray-500 uppercase">Total Products</p>
+                            <h3 id="dash-prod" class="text-4xl font-black mt-2">0</h3>
+                        </div>
+                        <div class="bg-[#181818] p-6 rounded-2xl hover:bg-[#222] transition border border-white/5">
+                            <p class="text-[10px] font-black text-gray-500 uppercase">Partners</p>
+                            <h3 id="dash-supp" class="text-4xl font-black mt-2">0</h3>
+                        </div>
+                        <div class="bg-[#181818] p-6 rounded-2xl hover:bg-[#222] transition border border-white/5">
+                            <p class="text-[10px] font-black text-rose-500 uppercase">Critical Low Stock</p>
+                            <h3 id="dash-low" class="text-4xl font-black mt-2">0</h3>
+                        </div>
+                        <div class="bg-[#181818] p-6 rounded-2xl hover:bg-[#222] transition border border-white/5">
+                            <p class="text-[10px] font-black text-[#1DB954] uppercase">Inventory Value</p>
+                            <h3 id="dash-val" class="text-4xl font-black mt-2">$0</h3>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#181818] p-8 rounded-3xl border border-white/5">
+                        <h4 class="font-black text-lg mb-6 flex items-center gap-2"><i class="fas fa-stream text-[#1DB954]"></i> Operational Audit Trail</h4>
+                        <div id="activityLog" class="space-y-4 font-mono text-[11px] text-gray-500">
+                            <div>[SYSTEM INITIALIZED] Waiting for manual transactions...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="productsPage" class="page">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-black">Data Matrix</h3>
+                        <button onclick="openM('pM')" class="bg-[#1DB954] text-black font-black px-8 py-3 rounded-full hover:scale-105 transition shadow-lg shadow-[#1DB954]/20">+ Add New Item</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-separate border-spacing-y-2">
+                            <thead><tr class="text-gray-500 text-[10px] uppercase font-black tracking-widest"><th class="px-4">ID</th><th>Label</th><th>Price</th><th>Units</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="pBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="suppliersPage" class="page">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-black">Supplier Directory</h3>
+                        <button onclick="openM('sM')" class="bg-white text-black font-black px-8 py-3 rounded-full hover:scale-105 transition">Connect Supplier</button>
+                    </div>
+                    <div id="sGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </section>
+
+                <section id="stockinPage" class="page">
+                    <div class="bg-[#181818] p-10 rounded-3xl max-w-lg mx-auto border border-white/5 shadow-2xl">
+                        <h3 class="text-2xl font-black mb-8 text-center text-[#1DB954]">Inventory Replenishment</h3>
+                        <div class="space-y-4">
+                            <select id="si-p" class="w-full bg-[#252525] p-4 rounded-2xl outline-none border-none text-sm"></select>
+                            <input type="number" id="si-q" placeholder="Quantity to Add" class="w-full bg-[#252525] p-4 rounded-2xl outline-none border-none text-sm">
+                            <button onclick="move('IN')" class="w-full bg-white text-black font-black py-4 rounded-full mt-6 hover:bg-[#1DB954] transition">Confirm Stock Entry</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="stockoutPage" class="page">
+                    <div class="bg-[#181818] p-10 rounded-3xl max-w-lg mx-auto border border-white/5 shadow-2xl">
+                        <h3 class="text-2xl font-black mb-8 text-center text-rose-500">Inventory Distribution</h3>
+                        <div class="space-y-4">
+                            <select id="so-p" class="w-full bg-[#252525] p-4 rounded-2xl outline-none border-none text-sm"></select>
+                            <input type="number" id="so-q" placeholder="Quantity to Remove" class="w-full bg-[#252525] p-4 rounded-2xl outline-none border-none text-sm">
+                            <button onclick="move('OUT')" class="w-full bg-rose-500 text-white font-black py-4 rounded-full mt-6 hover:scale-105 transition">Process Removal</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="reportsPage" class="page">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-[#181818] p-8 rounded-3xl">
+                            <h4 class="font-bold mb-6 text-rose-500">Low Stock Intelligence</h4>
+                            <div id="lowReport" class="space-y-3"></div>
+                        </div>
+                        <div class="bg-[#181818] p-8 rounded-3xl text-center">
+                            <h4 class="font-bold mb-6">Database Management</h4>
+                            <button onclick="localStorage.clear(); location.reload();" class="text-rose-500 text-sm hover:underline font-bold">WIPE ALL SYSTEM DATA</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="pM" class="modal fixed inset-0 z-50 hidden items-center justify-center p-6">
+        <div class="bg-[#181818] p-10 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl">
+            <h2 class="text-2xl font-black mb-6">New Manual Entry</h2>
+            <div class="space-y-4">
+                <input type="text" id="pName" placeholder="Product Label" class="w-full bg-[#252525] p-4 rounded-2xl outline-none border-none">
+                <input type="number" id="pPrice" placeholder="Unit Price ($)" class="w-full bg-[#252525] p-4 rounded-2xl outline-none border-none">
+                <div class="flex gap-4 pt-4">
+                    <button onclick="closeM('pM')" class="flex-1 py-4 font-bold text-gray-500">Abort</button>
+                    <button onclick="saveP()" class="flex-1 bg-[#1DB954] text-black font-black py-4 rounded-full">Save Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sM" class="modal fixed inset-0 z-50 hidden items-center justify-center p-6">
+        <div class="bg-[#181818] p-10 rounded-3xl w-full max-w-md border border-white/10">
+            <h2 class="text-2xl font-black mb-6">Connect Partner</h2>
+            <input type="text" id="sName" placeholder="Company Name" class="w-full bg-[#252525] p-4 rounded-2xl outline-none mb-4">
+            <div class="flex gap-4">
+                <button onclick="closeM('sM')" class="flex-1 py-4 font-bold text-gray-500">Cancel</button>
+                <button onclick="saveS()" class="flex-1 bg-white text-black font-black py-4 rounded-full">Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA HUB ---
+        let items = JSON.parse(localStorage.getItem('N_IT')) || [];
+        let supps = JSON.parse(localStorage.getItem('N_SP')) || [];
+        let logs = JSON.parse(localStorage.getItem('N_LG')) || [];
+
+        // --- AUTH ---
+        document.getElementById('loginForm').onsubmit = (e) => {
+            e.preventDefault();
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainApp').classList.remove('hidden');
+            syncUI();
+        };
+
+        // --- NAVIGATION ---
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id + 'Page').classList.add('active');
+            event.currentTarget.classList.add('active');
+            syncUI();
+        }
+
+        // --- MODAL CONTROLS ---
+        function openM(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeM(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- CORE OPS ---
+        function saveP() {
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            if(name && price) {
+                items.push({ id: Date.now(), name, price, stock: 0 });
+                syncData(); closeM('pM');
+                addLog(`Manual Entry Created: ${name}`);
+            }
+        }
+
+        function saveS() {
+            const name = document.getElementById('sName').value;
+            if(name) {
+                supps.push({ id: Date.now(), name });
+                syncData(); closeM('sM');
+                addLog(`Supplier Partner Linked: ${name}`);
+            }
+        }
+
+        function move(type) {
+            const pid = document.getElementById(type === 'IN' ? 'si-p' : 'so-p').value;
+            const qty = parseInt(document.getElementById(type === 'IN' ? 'si-q' : 'so-q').value);
+            const p = items.find(i => i.id == pid);
+            if(!p || isNaN(qty)) return alert("Select product and quantity.");
+            
+            if(type === 'IN') {
+                p.stock += qty;
+                addLog(`Stock Updated (+${qty}): ${p.name}`);
+            } else {
+                if(p.stock < qty) return alert("Insufficient Stock.");
+                p.stock -= qty;
+                addLog(`Stock Distributed (-${qty}): ${p.name}`);
+            }
+            syncData();
+            alert("Transaction Success.");
+        }
+
+        function syncData() {
+            localStorage.setItem('N_IT', JSON.stringify(items));
+            localStorage.setItem('N_SP', JSON.stringify(supps));
+            localStorage.setItem('N_LG', JSON.stringify(logs));
+            syncUI();
+        }
+
+        function syncUI() {
+            // Dashboard Calculations
+            document.getElementById('dash-prod').innerText = items.length;
+            document.getElementById('dash-supp').innerText = supps.length;
+            document.getElementById('dash-low').innerText = items.filter(i => i.stock < 10).length;
+            document.getElementById('dash-val').innerText = "$" + items.reduce((a,b) => a + (b.price * b.stock), 0).toLocaleString();
+
+            // Product Table
+            document.getElementById('pBody').innerHTML = items.map(i => `
+                <tr class="bg-[#181818] hover:bg-[#222] transition">
+                    <td class="p-4 rounded-l-2xl text-gray-600 font-mono text-[10px]">${i.id.toString().slice(-5)}</td>
+                    <td class="font-bold">${i.name}</td>
+                    <td class="text-[#1DB954] font-black">$${i.price}</td>
+                    <td class="font-bold">${i.stock}</td>
+                    <td><span class="text-[9px] font-black uppercase px-2 py-1 rounded-full ${i.stock < 10 ? 'bg-rose-500/10 text-rose-500' : 'bg-[#1DB954]/10 text-[#1DB954]'}">${i.stock < 10 ? 'CRITICAL' : 'STABLE'}</span></td>
+                    <td class="rounded-r-2xl text-rose-500 cursor-pointer" onclick="del(${i.id})"><i class="fas fa-trash-can"></i></td>
+                </tr>
+            `).join('');
+
+            // Select Options
+            const opt = '<option value="">Select Item...</option>' + items.map(i => `<option value="${i.id}">${i.name} (Qty: ${i.stock})</option>`).join('');
+            document.getElementById('si-p').innerHTML = opt;
+            document.getElementById('so-p').innerHTML = opt;
+
+            // Audit Trail
+            document.getElementById('activityLog').innerHTML = logs.slice(-5).reverse().map(l => `
+                <div class="flex gap-4 py-2 border-b border-white/5">
+                    <span class="text-[#1DB954]">></span>
+                    <span>${l.text}</span>
+                    <span class="ml-auto text-[9px] text-gray-700">${l.time}</span>
+                </div>
+            `).join('');
+
+            // Supplier Grid
+            document.getElementById('sGrid').innerHTML = supps.map(s => `
+                <div class="bg-[#181818] p-6 rounded-2xl border border-white/5">
+                    <h5 class="font-bold">${s.name}</h5>
+                    <p class="text-[10px] text-gray-600 mt-1 uppercase">Active Partner</p>
+                </div>
+            `).join('');
+
+            // Low Stock Report
+            document.getElementById('lowReport').innerHTML = items.filter(i => i.stock < 10).map(i => `
+                <div class="p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl flex justify-between text-xs">
+                    <span class="font-bold">${i.name}</span>
+                    <span class="text-rose-500 font-black">${i.stock} LEFT</span>
+                </div>
+            `).join('') || '<p class="text-xs text-gray-600">All stock levels stable.</p>';
+        }
+
+        function addLog(text) {
+            logs.push({ text, time: new Date().toLocaleTimeString() });
+            syncData();
+        }
+
+        function del(id) {
+            if(confirm("Erase this record?")) { items = items.filter(i => i.id !== id); syncData(); }
+        }
+
+        syncUI();
+    </script>
+</body>
+</html>
